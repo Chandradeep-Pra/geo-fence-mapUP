@@ -1,0 +1,13 @@
+version: "3.9"
+
+services:
+  app:
+    build:
+      context: .
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: file:./data/geofence-alert.db
+      NODE_ENV: production
+    volumes:
+      - ./data:/app/data
