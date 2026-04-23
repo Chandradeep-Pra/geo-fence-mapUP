@@ -46,3 +46,6 @@ For Vercel, set `DATABASE_URL` to your Neon/Postgres connection string.
 
 - SQLite is great for local setup, but Postgres is a better fit for free hosted deployment.
 - This submission keeps backend and frontend inside one Next.js app instead of splitting Go and React.
+
+### Lightweight System Design
+[exacalidraw link](https://excalidraw.com/#json=37fkdD2nlm7pjzYeo2DlY,glPntWMEVbr7Kxxl_c_HCQ)
