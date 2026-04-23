@@ -2,10 +2,11 @@
 
 import clsx from "clsx";
 import { formatDistanceToNow } from "date-fns";
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import type { DashboardData, LiveAlert } from "@/lib/assessment-types";
+import type { DashboardData } from "@/lib/assessment-types";
+import { useLiveAlerts } from "@/hooks/use-live-alerts";
 import {
   EmptyState,
   Panel,
@@ -24,33 +25,22 @@ export function AlertsPage({ initialData }: { initialData: DashboardData }) {
     vehicle_id: "",
     event_type: "both" as "entry" | "exit" | "both",
   });
-  const [liveAlerts, setLiveAlerts] = useState(initialData.liveAlerts);
-
-  async function refreshPage() {
-    startTransition(() => {
-      router.refresh();
-    });
-  }
-
-  useEffect(() => {
-    const eventSource = new EventSource("/ws/alerts");
-
-    eventSource.addEventListener("alert", (event) => {
-      const nextAlert = JSON.parse((event as MessageEvent).data) as LiveAlert;
-
-      setLiveAlerts((current) => [nextAlert, ...current].slice(0, 20));
+  const liveAlerts = useLiveAlerts(initialData.liveAlerts, {
+    onNewAlert: (nextAlert) => {
       toast.success(
         `${nextAlert.vehicle.vehicle_number} ${nextAlert.event_type} ${nextAlert.geofence.geofence_name}`,
       );
       startTransition(() => {
         router.refresh();
       });
-    });
+    },
+  });
 
-    return () => {
-      eventSource.close();
-    };
-  }, [router, startTransition]);
+  async function refreshPage() {
+    startTransition(() => {
+      router.refresh();
+    });
+  }
 
   async function handleAlertConfigSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();

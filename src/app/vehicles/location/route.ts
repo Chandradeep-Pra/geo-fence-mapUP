@@ -1,5 +1,4 @@
 import { startTimer, timedJson } from "@/lib/api";
-import { publishLiveAlert, type LiveAlertEvent } from "@/lib/alert-stream";
 import { isPointInsideGeofence, type LatLngCoordinate } from "@/lib/assessment-geo";
 import { vehicleLocationSchema } from "@/lib/assessment-validation";
 import { createEntityId, ensureDatabaseSetup, query } from "@/lib/db";
@@ -115,8 +114,6 @@ export async function POST(request: Request) {
       geofence_name: string;
       status: "inside";
     }> = [];
-    const liveAlerts: LiveAlertEvent[] = [];
-
     for (const geofence of geofencesResult.rows) {
       const coordinates = JSON.parse(geofence.coordinates_json) as LatLngCoordinate[];
       const isInside = isPointInsideGeofence(
@@ -247,30 +244,7 @@ export async function POST(request: Request) {
         ],
       );
 
-      liveAlerts.push({
-        event_id: eventId,
-        event_type: eventType,
-        timestamp: parsed.data.timestamp,
-        vehicle: {
-          vehicle_id: parsed.data.vehicle_id,
-          vehicle_number: vehicle.vehicle_number,
-          driver_name: vehicle.driver_name,
-        },
-        geofence: {
-          geofence_id: geofence.id,
-          geofence_name: geofence.name,
-          category: geofence.category,
-        },
-        location: {
-          latitude: parsed.data.latitude,
-          longitude: parsed.data.longitude,
-        },
-      });
     }
-
-    queueMicrotask(() => {
-      liveAlerts.forEach((event) => publishLiveAlert(event));
-    });
 
     return timedJson(startedAt, {
       vehicle_id: parsed.data.vehicle_id,

@@ -2,25 +2,12 @@
 
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import type { DashboardData, LiveAlert } from "@/lib/assessment-types";
+import type { DashboardData } from "@/lib/assessment-types";
+import { useLiveAlerts } from "@/hooks/use-live-alerts";
 import { EmptyState, Panel, SectionHeading, StatCard, categoryTone, formatCategory } from "@/components/assessment-ui";
 
 export function OverviewPage({ initialData }: { initialData: DashboardData }) {
-  const [liveAlerts, setLiveAlerts] = useState(initialData.liveAlerts);
-
-  useEffect(() => {
-    const eventSource = new EventSource("/ws/alerts");
-
-    eventSource.addEventListener("alert", (event) => {
-      const nextAlert = JSON.parse((event as MessageEvent).data) as LiveAlert;
-      setLiveAlerts((current) => [nextAlert, ...current].slice(0, 20));
-    });
-
-    return () => {
-      eventSource.close();
-    };
-  }, []);
+  const liveAlerts = useLiveAlerts(initialData.liveAlerts);
 
   return (
     <div className="grid gap-6">

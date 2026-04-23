@@ -5,7 +5,8 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import toast from "react-hot-toast";
-import type { DashboardData, GeofenceItem, LiveAlert } from "@/lib/assessment-types";
+import type { DashboardData, GeofenceItem } from "@/lib/assessment-types";
+import { useLiveAlerts } from "@/hooks/use-live-alerts";
 import {
   EmptyState,
   InputField,
@@ -63,21 +64,13 @@ export function VehiclesPage({ initialData }: { initialData: DashboardData }) {
       }
     };
   }, []);
-
-  useEffect(() => {
-    const eventSource = new EventSource("/ws/alerts");
-
-    eventSource.addEventListener("alert", (event) => {
-      const nextAlert = JSON.parse((event as MessageEvent).data) as LiveAlert;
+  useLiveAlerts(initialData.liveAlerts, {
+    onNewAlert: (nextAlert) => {
       toast.success(
         `${nextAlert.vehicle.vehicle_number} ${nextAlert.event_type} ${nextAlert.geofence.geofence_name}`,
       );
-    });
-
-    return () => {
-      eventSource.close();
-    };
-  }, [router, startTransition]);
+    },
+  });
 
   async function refreshData() {
     startTransition(() => {

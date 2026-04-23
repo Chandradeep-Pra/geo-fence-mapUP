@@ -1,8 +1,10 @@
 # Geo Fence Alert
 
-Next.js geofencing and vehicle tracking app with live alerts, map-based simulation, and local SQLite storage.
+Next.js geofencing and vehicle tracking app with polygon zones, live alerts, simulation flows, and a small dashboard.
 
 ## Run
+
+Local development:
 
 ```bash
 npm install
@@ -11,35 +13,36 @@ npm run dev
 
 Open `http://localhost:3000/dashboard`.
 
+## Deploy shape
+
+- Local: SQLite with `DATABASE_URL=file:./data/geofence-alert.db`
+- Hosted: Postgres recommended, e.g. Neon on Vercel
+
+For Vercel, set `DATABASE_URL` to your Neon/Postgres connection string.
+
 ## Main routes
 
-- `/dashboard/geofences` create and view polygon geofences
+- `/dashboard/geofences` create and inspect geofences
 - `/dashboard/vehicles` register vehicles, post locations, run simulations
-- `/dashboard/alerts` create, enable, disable, and delete alert rules
-- `/dashboard/violations` review entry and exit history
+- `/dashboard/alerts` manage alert rules and view live alerts
+- `/dashboard/violations` filter historical entry and exit events
 
-## Data shape
+## Data structure
 
-- `assessment_geofences`: polygon zones and category
-- `assessment_vehicles`: registered vehicles and driver metadata
-- `assessment_vehicle_locations`: raw location pings
-- `assessment_vehicle_geofence_state`: latest inside/outside state per vehicle and geofence
+- `assessment_geofences`: polygon boundaries and category
+- `assessment_vehicles`: vehicle and driver details
+- `assessment_vehicle_locations`: raw location updates
+- `assessment_vehicle_geofence_state`: latest inside/outside state
 - `assessment_alert_configs`: alert rules
-- `assessment_violation_events`: historical entry and exit events
-- `assessment_alert_events`: real-time alert records sent to clients
+- `assessment_violation_events`: entry and exit history
+- `assessment_alert_events`: delivered alert records
 
-Database file: `data/geofence-alert.db`
+## Real-time tradeoff
 
-## Real-time
+- The app keeps the required `/ws/alerts` stream endpoint, but the deployed dashboard uses database-backed polling for reliability on serverless hosting.
+- This avoids relying on in-memory process state, which is fragile on free serverless platforms.
 
-Live alerts are delivered through `GET /ws/alerts`.
+## Other tradeoffs
 
-Tradeoff:
-- The app uses Server-Sent Events instead of a true WebSocket server.
-- This keeps the setup simple inside a standard Next.js app and is enough for one-way live alert delivery.
-
-## Tradeoffs
-
-- SQLite keeps local setup very small, but it is not the best fit for high write volume or multi-instance deployment.
-- SSE is simpler than WebSocket here, but it does not support bi-directional communication.
-- The app is built fully in Next.js rather than splitting frontend and Go backend.
+- SQLite is great for local setup, but Postgres is a better fit for free hosted deployment.
+- This submission keeps backend and frontend inside one Next.js app instead of splitting Go and React.
